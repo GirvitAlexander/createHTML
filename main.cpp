@@ -216,8 +216,8 @@ bool BuildHtmlReport(int nInitBalance) {
 /**
  * @brief Main function
  * 
- * @param argc - count of argument
- * @param argv - arguments value
+ * @param argc - count of argument (should be 2)
+ * @param argv - arguments value (1 - name executable file,  2 - init balance)
  * @return int
  */
 int main(int argc, char *argv[]) {
