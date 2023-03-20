@@ -59,7 +59,7 @@ public:
         tags[nameTag] = valueTag;
     }
     
-    friend std::fstream& operator<<(std::fstream& fs, const Node& node);
+    friend std::ostream& operator<<(std::ostream& fs, const Node& node);
 
 private:
     string name;
@@ -75,7 +75,7 @@ private:
  * node - node that is being output
  * return: file stream
  */
-std::fstream& operator<<(std::fstream& fs, const Node& node) {
+std::ostream& operator<<(std::ostream& fs, const Node& node) {
     string tab(node.depth, '\t');
 
     fs << tab << "<" << node.name;
@@ -166,8 +166,7 @@ bool SaveHTMLToFile(std::shared_ptr<Node> rootNode) {
         return false;
     }
 
-    file << "<!DOCTYPE html>\n";
-    file << *rootNode;
+    file << "<!DOCTYPE html>\n" << *rootNode;
 
     file.close();
     return true; 
