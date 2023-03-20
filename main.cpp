@@ -2,10 +2,15 @@
 #include <fstream>
 #include <vector>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
+
+//shared_ptr
+#include <memory>
+
+// Rand
 #include <cstdlib>
 #include <ctime>
-#include <unordered_map>
-#include <memory>
 
 using std::string;
 using std::vector;
@@ -24,7 +29,7 @@ namespace {
  **/
 class Node {
 public:
-    explicit Node(string _name, bool _isEmptyNode = false, string _value = "") : name(_name), isEmptyNode(_isEmptyNode), value(_value) {}
+    explicit Node(const string& _name, bool _isEmptyNode = false, const string& _value = "") : name(_name), isEmptyNode(_isEmptyNode), value(_value) {}
 
     /**
      * @brief Add child to node
@@ -57,14 +62,32 @@ public:
     }
 
     /**
+     * @brief Get depth node
+     * @return size_t - depth node
+     **/
+    size_t getDepth() const {
+        return depth;
+    }
+
+    /**
      * @brief setting attribute for node
      * @param nameAttr - name tag node
      * @param valueAttr - value this attribute
      * @return * void 
      *
      **/
-    void setAttr(string nameAttr, string valueAttr) {
+    void setAttr(const string& nameAttr, const string& valueAttr) {
         attrs[nameAttr] = valueAttr;
+    }
+
+    /**
+     * @brief Set the Value node
+     * 
+     * @param _value - value node
+     * @return void 
+     **/
+    void setValue(const string& _value) {
+        value = _value;
     }
     
     friend std::ostream& operator<<(std::ostream& fs, const Node& node);
@@ -137,6 +160,49 @@ void CreateTable(vector<vector<int>>& table, int nInitBalance) {
 }
 
 /**
+ * @brief create CSS style
+ * 
+ * @param styleNode - style element in HTML
+ **/
+void CreateCSSNode(std::shared_ptr<Node> styleNode) {
+    string resultValue;
+    size_t depth = styleNode->getDepth();
+    string tab(depth + 1, '\t');
+
+    std::unordered_map<string, std::unordered_map<string, std::unordered_set<string>>> styleCSS;
+
+    styleCSS["td"]["border"].insert("1px");
+    styleCSS["td"]["border"].insert("solid");
+
+    styleCSS["table"]["width"].insert("60%");
+
+    styleCSS["thead"]["background-color"].insert("lightgrey");
+    styleCSS["thead"]["text-align"].insert("center");
+    styleCSS["thead"]["font-weight"].insert("bold");
+
+    styleCSS["td"]["padding-top"].insert("10px");
+    styleCSS["td"]["padding-bottom"].insert("10px");
+    styleCSS["td"]["padding-left"].insert("5px");
+    styleCSS["td"]["padding-right"].insert("5px");
+
+    styleCSS[".colInt"]["text-align"].insert("right");
+
+    for (const auto& [elem, properties]: styleCSS) {
+        resultValue += elem + " {\n";
+        for (const auto& [name, values]: properties) {
+            resultValue += tab + "\t" + name + ":";
+            for (const auto& value: values) {
+                resultValue += " " + value;
+            }
+            resultValue += ";\n";
+        }
+        resultValue += tab + "}\n" + tab;
+    }
+
+    styleNode->setValue(resultValue);
+}
+
+/**
  * @brief  Creating HTML tree for file
  * 
  * @param table - table with values
@@ -146,10 +212,18 @@ void CreateTable(vector<vector<int>>& table, int nInitBalance) {
 void CreateHTML(const vector<vector<int>>& table, std::shared_ptr<Node> rootNode) {
     auto headNode = std::make_shared<Node>("head");
     rootNode->addNode(headNode);
+
     headNode->addNode(std::make_shared<Node>("meta", true));
     headNode->getNode(0)->setAttr("charset", "utf-8");
-    headNode->addNode(std::make_shared<Node>("title", false, "Report"));
 
+    auto styleNode = std::make_shared<Node>("style");
+    headNode->addNode(styleNode);
+
+    styleNode->setAttr("type", "text/css");
+
+    CreateCSSNode(styleNode);
+
+    headNode->addNode(std::make_shared<Node>("title", false, "Report"));
     auto bodyNode = std::make_shared<Node>("body");
     rootNode->addNode(bodyNode);
 
@@ -171,6 +245,7 @@ void CreateHTML(const vector<vector<int>>& table, std::shared_ptr<Node> rootNode
         tableNode->getNode(1)->getNode(i)->addNode(std::make_shared<Node>("td", false, months[i]));
         for (size_t j = 0; j < COLUMNS - 1; ++j) {
             tableNode->getNode(1)->getNode(i)->addNode(std::make_shared<Node>("td", false, std::to_string(table[i][j])));
+            tableNode->getNode(1)->getNode(i)->getNode(j + 1)->setAttr("class", "colInt");
         }
     }
 }
@@ -183,7 +258,7 @@ void CreateHTML(const vector<vector<int>>& table, std::shared_ptr<Node> rootNode
  * @return false - file not created
  */
 bool SaveHTMLToFile(std::shared_ptr<Node> rootNode) {
-    std::fstream file("Report.htm");
+    std::fstream file("Report.htm", std::fstream::out | std::fstream::trunc);
     
     if (!file.is_open()) {
         return false;
@@ -233,7 +308,6 @@ int main(int argc, char *argv[]) {
         if (std::isdigit(argv[1][pos])) {
             balance *= 10;
             balance += (argv[1][pos] - '0');
-            std::cout << balance << "\n";
             ++pos;
         } else {
             std::cout << "Invalid input. Argument should be number!";
