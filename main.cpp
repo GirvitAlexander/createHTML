@@ -5,10 +5,13 @@
 #include <unordered_map>
 #include <unordered_set>
 
+//logic_error
+#include <stdexcept>
+
 //shared_ptr
 #include <memory>
 
-// Rand
+//rand
 #include <cstdlib>
 #include <ctime>
 
@@ -33,17 +36,17 @@ public:
 
     /**
      * @brief Add child to node
-     * @param newNode - new child for node
+     * @param newNode new child for node
      * @return void
      **/
-    void addNode(std::shared_ptr<Node> newNode) {
+    void addNode(const std::shared_ptr<Node>& newNode) {
         newNode->depth = depth + 1;
         arrayNodes.push_back(newNode);
     }
 
     /**
      * @brief Get child node by index
-     * @param index - index array children
+     * @param index index array children
      * @return shared pointer to child node
      **/
     std::shared_ptr<Node> getNode(size_t index) const {
@@ -63,7 +66,7 @@ public:
 
     /**
      * @brief Get depth node
-     * @return size_t - depth node
+     * @return size_t depth node
      **/
     size_t getDepth() const {
         return depth;
@@ -71,8 +74,8 @@ public:
 
     /**
      * @brief setting attribute for node
-     * @param nameAttr - name tag node
-     * @param valueAttr - value this attribute
+     * @param nameAttr name tag node
+     * @param valueAttr value this attribute
      * @return * void 
      *
      **/
@@ -83,7 +86,7 @@ public:
     /**
      * @brief Set the Value node
      * 
-     * @param _value - value node
+     * @param _value value node
      * @return void 
      **/
     void setValue(const string& _value) {
@@ -105,8 +108,8 @@ private:
 /**
  * @brief Operator for output in file node
  * 
- * @param fs - file stream, where the information about the node is output
- * @param node - node that is being output
+ * @param fs file stream, where the information about the node is output
+ * @param node node that is being output
  * @return std::ostream& - file stream
  */
 std::ostream& operator<<(std::ostream& fs, const Node& node) {
@@ -135,8 +138,8 @@ std::ostream& operator<<(std::ostream& fs, const Node& node) {
 /**
  * @brief Create table for report
  * 
- * @param table - table that is filled with value
- * @param nInitBalance - elementary balance
+ * @param table table that is filled with value
+ * @param nInitBalance elementary balance
  * @return void
  */
 void CreateTable(vector<vector<int>>& table, int nInitBalance) {
@@ -162,9 +165,10 @@ void CreateTable(vector<vector<int>>& table, int nInitBalance) {
 /**
  * @brief create CSS style
  * 
- * @param styleNode - style element in HTML
+ * @param styleNode style element in HTML
+ * @return void
  **/
-void CreateCSSNode(std::shared_ptr<Node> styleNode) {
+void CreateCSSNode(const std::shared_ptr<Node>& styleNode) {
     string resultValue;
     size_t depth = styleNode->getDepth();
     string tab(depth + 1, '\t');
@@ -180,10 +184,7 @@ void CreateCSSNode(std::shared_ptr<Node> styleNode) {
     styleCSS["thead"]["text-align"].insert("center");
     styleCSS["thead"]["font-weight"].insert("bold");
 
-    styleCSS["td"]["padding-top"].insert("10px");
-    styleCSS["td"]["padding-bottom"].insert("10px");
-    styleCSS["td"]["padding-left"].insert("5px");
-    styleCSS["td"]["padding-right"].insert("5px");
+    styleCSS["td"]["padding"].insert("10px 5px");
 
     styleCSS[".colInt"]["text-align"].insert("right");
 
@@ -205,11 +206,11 @@ void CreateCSSNode(std::shared_ptr<Node> styleNode) {
 /**
  * @brief  Creating HTML tree for file
  * 
- * @param table - table with values
- * @param rootNode - root node with name <html>
+ * @param table table with values
+ * @param rootNode root node with name <html>
  * @return void
  */
-void CreateHTML(const vector<vector<int>>& table, std::shared_ptr<Node> rootNode) {
+void CreateHTML(const vector<vector<int>>& table, const std::shared_ptr<Node>& rootNode) {
     auto headNode = std::make_shared<Node>("head");
     rootNode->addNode(headNode);
 
@@ -234,11 +235,13 @@ void CreateHTML(const vector<vector<int>>& table, std::shared_ptr<Node> rootNode
     tableNode->addNode(std::make_shared<Node>("thead"));
     tableNode->addNode(std::make_shared<Node>("tbody"));
     auto trHead = std::make_shared<Node>("tr");
+
     // tableNode[0] = thead
     tableNode->getNode(0)->addNode(trHead);
     for (size_t i = 0; i < COLUMNS; ++i) {
         trHead->addNode(std::make_shared<Node>("td", false, headerTable[i]));
     }
+
     // tableNode[1] = tbody
     for (size_t i = 0; i < ROWS; ++i) {
         tableNode->getNode(1)->addNode(std::make_shared<Node>("tr"));
@@ -253,11 +256,11 @@ void CreateHTML(const vector<vector<int>>& table, std::shared_ptr<Node> rootNode
 /**
  * @brief Output HTML tree into file
  *
- * @param rootNode - root node with name <html>
- * @return true - file created successful
+ * @param rootNode root node with name <html>
+ * @return true - file created successful;
  * @return false - file not created
  */
-bool SaveHTMLToFile(std::shared_ptr<Node> rootNode) {
+bool SaveHTMLToFile(const std::shared_ptr<Node>& rootNode) {
     std::fstream file("Report.htm", std::fstream::out | std::fstream::trunc);
     
     if (!file.is_open()) {
@@ -273,8 +276,8 @@ bool SaveHTMLToFile(std::shared_ptr<Node> rootNode) {
 /**
  * @brief Build HTML file for report
  * 
- * @param nInitBalance  - elementary balance
- * @return true - file created successful
+ * @param nInitBalance elementary balance
+ * @return true - file created successful;
  * @return false - file not created
  */
 bool BuildHtmlReport(int nInitBalance) {
@@ -291,8 +294,8 @@ bool BuildHtmlReport(int nInitBalance) {
 /**
  * @brief Main function
  * 
- * @param argc - count of argument (should be 2)
- * @param argv - arguments value (1 - name executable file,  2 - init balance)
+ * @param argc count of argument (should be 2)
+ * @param argv arguments value (1 - name executable file,  2 - init balance)
  * @return int
  */
 int main(int argc, char *argv[]) {
